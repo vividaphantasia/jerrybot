@@ -1,1 +1,1 @@
-{"happiness": "0", "times_pet": 250, "status": ":)"}
+{"happiness": "0", "times_pet": 592, "status": ":)"}

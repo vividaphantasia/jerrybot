@@ -1,1 +1,1 @@
-{"coins": 0, "items": [], "pats": 77}
+{"coins": 3000, "items": [], "pats": 208, "claim": 1603305180}

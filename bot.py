@@ -32,7 +32,8 @@ def file_check(id):
             user_json = {
                 "coins": 0,
                 "items": [],
-                "pats": 0
+                "pats": 0,
+                "claim": 0
             }
             f.write(json.dumps(user_json))
 
@@ -42,7 +43,7 @@ def add_coins(id, amount):
         user_json = json.loads(f.read())
         
     with open(f'{id}.txt', 'w') as f:
-        user_json["coins"] = int(user_json["pats"]) + amount
+        user_json["coins"] = int(user_json["coins"]) + amount
         f.write(json.dumps(user_json))
 
 
@@ -60,8 +61,16 @@ def add_pats(id):
     with open('jerry.txt', 'w') as f:
         f.write(json.dumps(saved_jerry))
 
-def add_items(id, amount):
-    pass
+def add_items(id, item):
+    file_check(id)
+    with open(f'{id}.txt', 'r') as f:
+        user_json = json.loads(f.read())
+        
+    with open(f'{id}.txt', 'w') as f:
+        if item not in user_json["items"]:
+            user_json["items"].append(item)
+        
+        f.write(json.dumps(user_json))
 
 @bot.event
 async def on_ready():
@@ -78,10 +87,11 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.content.startswith('<:jerry:765676912374186094>'):
-        rand_num = random.randint(1, 100)
+        rand_num = random.randint(1, 1000)
         if rand_num == 1:
             await message.channel.send("That's me! hehe")
-            add_coins(message.author.id, 250)
+            add_items(message.author.id, "<:jerry:765676912374186094>")
+            add_coins(message.author.id, 2500)
 
     await bot.process_commands(message)            
 
@@ -108,11 +118,16 @@ async def profile(ctx):
     with open(f'{user_id}.txt', "r") as f:
         user_json = json.loads(f.read())
 
+    items_string = " ".join(user_json["items"]).strip()
+
     embed=discord.Embed(title=f"{ctx.author.name}'s Profile", description="Shows all the stats Jerry remembers about you.", color=0x80ffff)
     embed.set_thumbnail(url="https://images.emojiterra.com/google/android-nougat/512px/1f422.png")
     embed.add_field(name="Jerry Coins", value=user_json["coins"], inline=True)
     embed.add_field(name="Pats", value=user_json["pats"], inline=True)
-    embed.add_field(name="Items", value="None", inline=False)
+    if items_string:
+        embed.add_field(name="Badges", value=items_string, inline=False)
+    else:
+        embed.add_field(name="Badges", value="None", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command(name="pet", help="Give Jerry a pet")
@@ -129,7 +144,7 @@ async def pet(ctx):
     special_messages = [
         "I hope you don't have feelings for me because it's weird to crush on a pet even after your crush turned you down.",
         "I don't get why you're always talking about her she already clowned you loser.",
-        ":sunglasses:",
+        "Lil Jerry :sunglasses:",
         "Jerry is a happy boi <:jerry:765676912374186094>"
     ]
 
@@ -161,11 +176,38 @@ async def coinflip(ctx):
     embed.set_thumbnail(url="https://images.emojiterra.com/google/android-nougat/512px/1f422.png")
     await ctx.send(embed=embed)
 
+@bot.command(name="store", help="Displays the store items")
+async def store(ctx):
+    pass
+
+@bot.command(name="buy", help="Allows you to use your coins to buy items from the store")
+async def buy(ctx):
+    pass
+
+@bot.command(name="claim", help="Daily claim of coins")
+async def claim(ctx):
+    if spam_check(time_since_last_command):
+        return 
+    id = ctx.author.id
+    file_check(id)
+    with open(f'{id}.txt', 'r') as f:
+        user_json = json.loads(f.read())
+        
+    with open(f'{id}.txt', 'w') as f:
+        if user_json['claim'] == 0 or int(time.time()) >= (user_json['claim'] + 86400):
+            user_json['claim'] = int(time.time())
+            user_json['coins'] += 1000
+            await ctx.send("Here's your 1000 coins for the day!")
+        else:
+            await ctx.send("You've already claimed your coins for today. Try again tomorrow!")
+
+        f.write(json.dumps(user_json))
+
 @bot.command(name="goodmorning", help="Say goodmorning to Jerry")
 async def goodmorning(ctx):
     if spam_check(time_since_last_command):
         return    
-    pass
+    await ctx.send(f'*YAWN* Goodmorning :yawning_face:')
 
 @bot.command(name="goodnight", help="Say goodnight to Jerry(This will disconnect the bot)")
 async def goodnight(ctx):
